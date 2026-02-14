@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { competitions as competitionsData } from "../data/competitions";
+import UserNavbar from "../components/UserNavbar";
+import { useNavigate } from "react-router-dom"; // for redirect
 
-export default function Competitions() {
+export default function Competitions({ user }) {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortOption, setSortOption] = useState("Trending");
+
+  const navigate = useNavigate();
 
   // Format PKR currency
   const formatPrize = (value) =>
@@ -14,12 +18,10 @@ export default function Competitions() {
   // Filtered competitions
   const filteredCompetitions = competitionsData
     .filter((comp) => {
-      const matchesSearch =
-        comp.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = comp.name.toLowerCase().includes(search.toLowerCase());
       const matchesCategory =
         categoryFilter.length === 0 || categoryFilter.includes(comp.category);
-      const matchesStatus =
-        statusFilter === "All" || comp.status === statusFilter;
+      const matchesStatus = statusFilter === "All" || comp.status === statusFilter;
       return matchesSearch && matchesCategory && matchesStatus;
     })
     .sort((a, b) => {
@@ -29,22 +31,43 @@ export default function Competitions() {
       return 0;
     });
 
+  // Handle Register click
+  const handleRegister = (compId) => {
+    if (!user) {
+      navigate("/login"); // redirect to login if not logged in
+    } else {
+      navigate(`/register/${compId}`); // or your actual registration page
+    }
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen font-outfit">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-          <a href="/" className="flex items-center gap-2">
-            <i className="fas fa-snowflake text-blue-600 text-xl"></i>
-            <span className="font-bold text-xl text-slate-900">Taakra</span>
-          </a>
-        </div>
-      </nav>
+      {user ? (
+        <UserNavbar username={user.username} onLogout={() => console.log("Logout")} />
+      ) : (
+        <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+            <a href="/" className="flex items-center gap-2">
+              <i className="fas fa-snowflake text-blue-600 text-xl"></i>
+              <span className="font-bold text-xl text-slate-900">Taakra</span>
+            </a>
+            <div>
+              <button
+                onClick={() => navigate("/login")}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        </nav>
+      )}
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Top Filters */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <input
               type="text"
               placeholder="Search competitions..."
@@ -122,7 +145,10 @@ export default function Competitions() {
                 ></div>
               </div>
               <div className="text-green-600 font-semibold mb-2">{formatPrize(comp.prize)}</div>
-              <button className="w-full py-2 bg-slate-900 text-white rounded-lg hover:bg-blue-600 transition">
+              <button
+                onClick={() => handleRegister(comp.id)}
+                className="w-full py-2 bg-slate-900 text-white rounded-lg hover:bg-blue-600 transition"
+              >
                 Register
               </button>
             </div>
