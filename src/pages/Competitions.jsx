@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { competitions as competitionsData } from "../data/competitions";
 
 export default function Competitions() {
   const [search, setSearch] = useState("");
@@ -6,83 +7,25 @@ export default function Competitions() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortOption, setSortOption] = useState("Trending");
 
-  // Sample competition data
-  const competitions = [
-    {
-      id: 1,
-      name: "Winter Code Fest 2026",
-      category: "Development",
-      date: "Feb 28",
-      prize: "$5,000",
-      spots: "142/200",
-      filled: 71,
-      tags: ["Coding", "Algorithms"],
-      avatars: ["A", "B"],
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80",
-      status: "Open",
-    },
-    {
-      id: 2,
-      name: "UI/UX Dark Mode Challenge",
-      category: "Design",
-      date: "Mar 10",
-      prize: "$2,000",
-      spots: "45/100",
-      filled: 45,
-      tags: ["Design", "UI/UX"],
-      avatars: ["X", "Y"],
-      image: "https://images.unsplash.com/photo-1561883088-039e53143d73?w=800&q=80",
-      status: "Open",
-    },
-    {
-      id: 3,
-      name: "Pro Gaming Tournament",
-      category: "Gaming",
-      date: "Mar 15",
-      prize: "$10,000",
-      spots: "300/500",
-      filled: 60,
-      tags: ["Gaming", "Strategy"],
-      avatars: ["G", "H"],
-      image: "https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?w=800&q=80",
-      status: "Live",
-    },
-    {
-      id: 4,
-      name: "AI Hackathon",
-      category: "Development",
-      date: "Apr 1",
-      prize: "$7,500",
-      spots: "180/200",
-      filled: 90,
-      tags: ["AI", "Coding"],
-      avatars: ["I", "J"],
-      image: "https://images.unsplash.com/photo-1581091870621-3c6f3c3833fc?w=800&q=80",
-      status: "Completed",
-    },
-  ];
+  // Format PKR currency
+  const formatPrize = (value) =>
+    new Intl.NumberFormat("en-PK", { style: "currency", currency: "PKR" }).format(value);
 
-  // Filter and search logic
-  const filteredCompetitions = competitions
+  // Filtered competitions
+  const filteredCompetitions = competitionsData
     .filter((comp) => {
       const matchesSearch =
-        comp.name.toLowerCase().includes(search.toLowerCase()) ||
-        comp.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()));
+        comp.name.toLowerCase().includes(search.toLowerCase());
       const matchesCategory =
         categoryFilter.length === 0 || categoryFilter.includes(comp.category);
       const matchesStatus =
         statusFilter === "All" || comp.status === statusFilter;
-
       return matchesSearch && matchesCategory && matchesStatus;
     })
     .sort((a, b) => {
       if (sortOption === "Trending") return b.filled - a.filled;
       if (sortOption === "Newest") return new Date(b.date) - new Date(a.date);
-      if (sortOption === "Prize Pool") {
-        const numA = parseInt(a.prize.replace(/\D/g, ""));
-        const numB = parseInt(b.prize.replace(/\D/g, ""));
-        return numB - numA;
-      }
+      if (sortOption === "Prize Pool") return b.prize - a.prize;
       return 0;
     });
 
@@ -120,7 +63,7 @@ export default function Competitions() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {["Open", "Live", "Completed", "All"].map((status) => (
               <button
                 key={status}
@@ -138,22 +81,16 @@ export default function Competitions() {
         </div>
 
         {/* Category Filters */}
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-4 flex-wrap">
           {["Development", "Design", "Gaming"].map((cat) => (
-            <label
-              key={cat}
-              className="flex items-center gap-1 cursor-pointer"
-            >
+            <label key={cat} className="flex items-center gap-1 cursor-pointer">
               <input
                 type="checkbox"
                 className="w-4 h-4 text-blue-600"
                 checked={categoryFilter.includes(cat)}
                 onChange={(e) => {
-                  if (e.target.checked) {
-                    setCategoryFilter([...categoryFilter, cat]);
-                  } else {
-                    setCategoryFilter(categoryFilter.filter((c) => c !== cat));
-                  }
+                  if (e.target.checked) setCategoryFilter([...categoryFilter, cat]);
+                  else setCategoryFilter(categoryFilter.filter((c) => c !== cat));
                 }}
               />
               <span>{cat}</span>
@@ -171,41 +108,23 @@ export default function Competitions() {
           {filteredCompetitions.map((comp) => (
             <div
               key={comp.id}
-              className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all"
+              className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all p-4"
             >
-              <div className="h-48 relative">
+              <h3 className="font-bold text-lg mb-2">{comp.name}</h3>
+              <div className="flex justify-between text-sm text-slate-500 mb-2">
+                <span>📅 {comp.date}</span>
+                <span>👥 {comp.totalUsers} users</span>
+              </div>
+              <div className="w-full bg-slate-100 h-2 rounded-full mb-2">
                 <div
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${comp.image})` }}
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: `${comp.filled}%` }}
                 ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
-                <div className="absolute top-2 left-2 px-2 py-1 bg-white/20 rounded-full text-xs text-white">
-                  {comp.tags[0]}
-                </div>
-                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end text-white">
-                  <h3 className="font-bold text-lg">{comp.name}</h3>
-                  <span className="font-bold text-green-400">{comp.prize}</span>
-                </div>
               </div>
-              <div className="p-4">
-                <div className="flex justify-between text-sm text-slate-500 mb-2">
-                  <span>
-                    📅 {comp.date}
-                  </span>
-                  <span>
-                    👥 {comp.spots}
-                  </span>
-                </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full mb-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${comp.filled}%` }}
-                  ></div>
-                </div>
-                <button className="w-full py-2 mt-2 bg-slate-900 text-white rounded-lg hover:bg-blue-600 transition">
-                  Register
-                </button>
-              </div>
+              <div className="text-green-600 font-semibold mb-2">{formatPrize(comp.prize)}</div>
+              <button className="w-full py-2 bg-slate-900 text-white rounded-lg hover:bg-blue-600 transition">
+                Register
+              </button>
             </div>
           ))}
         </div>
